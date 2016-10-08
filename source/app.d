@@ -62,8 +62,6 @@ struct Collatz(T) if(isIntegral!T) {
         assert(!empty);
     } body {
         // 初期値のビットを取り出し、偶奇性を判定
-        bits_.popFront();
-
         // 奇数の場合はa(2x + 1)+b == 2ax + a + b
         // 偶数の場合は係数のみ倍
         if(bits_.front) {
@@ -83,6 +81,9 @@ struct Collatz(T) if(isIntegral!T) {
                 offset_ >>>= ONE;
             }
         }
+
+        // 次のビットへ
+        bits_.popFront();
     }
 private:
     enum ONE = cast(T) 1;
@@ -110,8 +111,33 @@ unittest {
     c.popFront();
     assert(c.empty);
 }
+
+unittest {
+    auto c = Collatz!uint(0b1001);
+    assert(c.front == tuple(1, 0));
+
+    // 1
+    c.popFront();
+    assert(c.front == tuple(3, 2));
+
+    // 0
+    c.popFront();
+    assert(c.front == tuple(3, 1));
+
+    // 0
+    c.popFront();
+    assert(c.front == tuple(9, 2));
+
+    // 1
+    c.popFront();
+    assert(c.empty);
+}
+
 static assert(isInputRange!(Collatz!uint));
 
 void main() {
+    foreach(i; 2 .. 128) {
+        writefln("%3d %s", i, Collatz!uint(i).array[$-1]);
+    }
 }
 
