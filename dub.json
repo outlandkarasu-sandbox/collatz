@@ -1,0 +1,9 @@
+{
+	"name": "collatz",
+	"authors": [
+		"Akira Yamaguchi"
+	],
+	"description": "Collatz conjecture program.",
+	"copyright": "Copyright © 2016, Akira Yamaguchi",
+	"license": "MIT"
+}
