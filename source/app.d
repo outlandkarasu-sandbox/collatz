@@ -1,6 +1,6 @@
 import std.stdio;
+import std.string : format;
 import std.traits : isIntegral;
-import std.typecons : Tuple, tuple;
 import std.range : isInputRange;
 import std.array : array;
 import std.conv : to;
@@ -37,6 +37,7 @@ struct Bits(T) if(isIntegral!T) {
     @property @safe pure nothrow @nogc const {
         bool front() {return value_.odd;}
         bool empty() {return value_ == 0;}
+        T value() {return value_;}
     }
     @safe nothrow @nogc void popFront() {value_ >>= (cast(T)1);}
 private:
@@ -52,9 +53,21 @@ static assert(isInputRange!(Bits!uint));
 
 /// コラッツ問題の処理を行うstruct
 struct Collatz(T) if(isIntegral!T) {
+
+    /// 計算結果の型
+    struct Result {
+        T cofficient;
+        T n;
+        T offset;
+        @safe pure const {
+            @property T value() nothrow @nogc {return cofficient * n + offset;}
+            string toString() {return format("(%d,%d,%d)", cofficient, n, offset);}
+        }
+    }
+
     this(T value) {this.bits_ = Bits!T(value);}
     @property @safe pure nothrow @nogc const {
-        Tuple!(T, T) front() {return typeof(return)(cofficient_, offset_);}
+        Result front() {return typeof(return)(cofficient_, bits_.value, offset_);}
         bool empty() {return bits_.empty;}
     }
     @safe nothrow @nogc void popFront()
@@ -95,18 +108,19 @@ private:
 ///
 unittest {
     auto c = Collatz!uint(0b111);
+    alias Result = typeof(c).Result;
     assert(!c.empty);
-    assert(c.front == tuple(1, 0));
+    assert(c.front == Result(1, 0));
 
     // (3(2n + 1) + 1) == (6n + 4) -> (3n + 2)
     c.popFront();
     assert(!c.empty);
-    assert(c.front == tuple(3, 2));
+    assert(c.front == Result(3, 2));
 
     // (3(2n + 1) + 2) == (6n + 5) -> (18n + 16) -> (9n + 8)
     c.popFront();
     assert(!c.empty);
-    assert(c.front == tuple(9, 8));
+    assert(c.front == Result(9, 8));
 
     c.popFront();
     assert(c.empty);
@@ -114,19 +128,20 @@ unittest {
 
 unittest {
     auto c = Collatz!uint(0b1001);
-    assert(c.front == tuple(1, 0));
+    alias Result = typeof(c).Result;
+    assert(c.front == Result(1, 0));
 
     // 1
     c.popFront();
-    assert(c.front == tuple(3, 2));
+    assert(c.front == Result(3, 2));
 
     // 0
     c.popFront();
-    assert(c.front == tuple(3, 1));
+    assert(c.front == Result(3, 1));
 
     // 0
     c.popFront();
-    assert(c.front == tuple(9, 2));
+    assert(c.front == Result(9, 2));
 
     // 1
     c.popFront();
@@ -135,9 +150,22 @@ unittest {
 
 static assert(isInputRange!(Collatz!uint));
 
+/// ユーティリティ関数
+Collatz!T collatz(T)(T value) if(isIntegral!T) {return Collatz!T(value);}
+
 void main() {
-    foreach(i; 2 .. 128) {
-        writefln("%3d %s", i, Collatz!uint(i).array[$-1]);
+    enum BITS = 8;
+    foreach(i; 0 .. BITS) {
+        auto n = (2^^BITS-1) ^ (1 << i);
+        auto r = collatz(n).array[$-1];
+        writefln("%0*b %0*b %d", BITS, n, BITS * 2, r.value, r.value);
     }
+    /*
+    for(uint n = 27; n > 1;) {
+        auto r = collatz(n).array[$-1];
+        writefln("%s %b", r, r.value);
+        n = r.value;
+    }
+    */
 }
 
