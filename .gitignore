@@ -1,7 +1,19 @@
 .dub
 docs.json
 __dummy.html
+docs/
+/collatz
+collatz.so
+collatz.dylib
+collatz.dll
+collatz.a
+collatz.lib
+collatz-test-*
+*.exe
+*.pdb
 *.o
 *.obj
-collatz
-*.swp
+*.lst
+
+# ignore output files
+*.csv
